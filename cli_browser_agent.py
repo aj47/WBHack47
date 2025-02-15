@@ -17,9 +17,9 @@ def activate_browser_agent(task: str) -> str:
 
 def main():
     # Ensure the Google API key is set via the environment variable
-    api_key = os.getenv("GOOGLE_API_KEY")
+    api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
-        print("Error: Please set the GOOGLE_API_KEY environment variable.")
+        print("Error: Please set the GEMINI_API_KEY environment variable.")
         sys.exit(1)
     
     # Get the task from command line arguments; otherwise prompt the user
