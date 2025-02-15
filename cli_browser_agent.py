@@ -37,6 +37,7 @@ def main():
     response = client.models.generate_content(
         model="gemini-2.0-flash-001",
         contents=user_task,
+        file=client.files.upload(file='x.pdf'),
         config=types.GenerateContentConfig(
             tools=[activate_browser_agent],
             automatic_function_calling=types.AutomaticFunctionCallingConfig(maximum_remote_calls=2),
