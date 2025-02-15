@@ -2,6 +2,7 @@
 import sys
 import asyncio
 import os
+import argparse
 from google import genai
 from google.genai import types
 from browser_use import Agent
@@ -22,11 +23,19 @@ def main():
         print("Error: Please set the GEMINI_API_KEY environment variable.")
         sys.exit(1)
     
-    # Get the task from command line arguments; otherwise prompt the user
-    if len(sys.argv) > 1:
-        user_task = " ".join(sys.argv[1:])
-    else:
-        user_task = input("Enter the task for the browser agent: ")
+    # Parse command line arguments for task and file to upload
+    parser = argparse.ArgumentParser(description="Run browser agent with a task and file upload context")
+    parser.add_argument("task", nargs='?', help="Task for the browser agent")
+    parser.add_argument("--file", "-f", help="Path to file to upload")
+    args = parser.parse_args()
+
+    if not args.task:
+        args.task = input("Enter the task for the browser agent: ")
+
+    if not args.file:
+        args.file = input("Enter the file path to upload: ")
+
+    user_task = args.task
     
     # Create the Gen AI client using the API key
     client = genai.Client(api_key=api_key)
@@ -37,7 +46,7 @@ def main():
     response = client.models.generate_content(
         model="gemini-2.0-flash-001",
         contents=user_task,
-        file=client.files.upload(file='x.pdf'),
+        file=client.files.upload(file=args.file),
         config=types.GenerateContentConfig(
             tools=[activate_browser_agent],
             automatic_function_calling=types.AutomaticFunctionCallingConfig(maximum_remote_calls=2),
