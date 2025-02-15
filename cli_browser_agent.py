@@ -22,36 +22,44 @@ def main():
         print("Error: Please set the GEMINI_API_KEY environment variable.")
         sys.exit(1)
     
-    # Get the task from command line arguments; otherwise prompt the user
-    if len(sys.argv) > 1:
-        user_task = " ".join(sys.argv[1:])
-    else:
-        user_task = input("Enter the task for the browser agent: ")
-    
     # Create the Gen AI client using the API key
     client = genai.Client(api_key=api_key)
     
-    # Generate content with function calling enabled.
-    # The configuration below forces function call mode to 'ANY' so that if the model
-    # deems it appropriate, it will call the provided activate_browser_agent function.
-    response = client.models.generate_content(
-        model="gemini-2.0-flash-001",
-        contents=user_task,
-        config=types.GenerateContentConfig(
-            tools=[activate_browser_agent],
-            automatic_function_calling=types.AutomaticFunctionCallingConfig(maximum_remote_calls=2),
-            tool_config=types.ToolConfig(
-                function_calling_config=types.FunctionCallingConfig(mode='ANY')
+    print("Welcome to the Gen AI Chat Interface. Type 'exit' to quit.")
+    while True:
+        user_task = input("Enter the task: ").strip()
+        if user_task.lower() in {"exit", "quit"}:
+            print("Goodbye!")
+            break
+        
+        pdf_path = input("Enter the path for a local PDF file to include in context (or leave blank to skip): ").strip()
+        if pdf_path:
+            try:
+                uploaded_pdf = client.files.upload(file=pdf_path)
+                contents = [user_task, uploaded_pdf]
+                system_instruction_text = "Based on the attached PDF, generate detailed step-by-step instructions for how to achieve the task using a browser agent."
+            except Exception as e:
+                print(f"Warning: Could not upload file: {e}")
+                contents = user_task
+                system_instruction_text = "Generate detailed step-by-step instructions for how to achieve the task using a browser agent."
+        else:
+            contents = user_task
+            system_instruction_text = "Generate detailed step-by-step instructions for how to achieve the task using a browser agent."
+        
+        response = client.models.generate_content(
+            model="gemini-2.0-flash-001",
+            contents=contents,
+            config=types.GenerateContentConfig(
+                system_instruction=system_instruction_text,
+                automatic_function_calling=types.AutomaticFunctionCallingConfig(maximum_remote_calls=2),
+                tool_config=types.ToolConfig(
+                    function_calling_config=types.FunctionCallingConfig(mode='ANY')
+                )
             )
         )
-    )
-    
-    # Print the result from the function call if one occurred; otherwise, print the model's response.
-    if response.function_calls:
-        print("Browser agent result:")
-    else:
+        
         print("Response from Gen AI:")
-    print(response.text)
+        print(response.text)
 
 if __name__ == "__main__":
     main()
