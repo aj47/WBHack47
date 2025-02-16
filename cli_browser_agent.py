@@ -68,7 +68,7 @@ def main():
             properties={
                 'steps': types.Schema(
                     type='STRING',
-                    description='Detailed step by step instructions for browser use',
+                    description='Detailed step by step instructions for browser use. The PDF file is already available to the agent - do NOT ask for a URL.',
                 ),
             },
             required=['steps'],
@@ -78,9 +78,17 @@ def main():
     tool = types.Tool(function_declarations=[function])
 
     # Generate content with function calling enabled
+    # Create content parts including both text and file
+    content_parts = [genai.types.Part(text=user_task)]
+    if upload_file:
+        content_parts.append(genai.types.Part(file_data=genai.types.FileData(
+            mime_type=upload_file.mime_type,
+            file_uri=upload_file.uri
+        )))
+
     response = client.models.generate_content(
-        model="gemini-2.0-flash-001",
-        contents=user_task,
+        model="gemini-2-0-flash-001",
+        contents=content_parts,
         config=types.GenerateContentConfig(
             tools=[tool],
             automatic_function_calling=types.AutomaticFunctionCallingConfig(maximum_remote_calls=2),
