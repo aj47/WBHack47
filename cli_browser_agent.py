@@ -11,8 +11,13 @@ from browser_use import Agent, Browser, BrowserConfig
 from langchain_openai import ChatOpenAI
 from query_pdf import search_pdf
 import weave
+from together import Together
+from typing import Any, Optional, Dict, List, Literal
+from pydantic import Field, BaseModel, ValidationError
+
 
 weave.init('metis')
+client = Together()
 
 @weave.op()
 def activate_browser_agent(steps: str, task: str) -> str:
@@ -65,6 +70,15 @@ def activate_browser_agent(steps: str, task: str) -> str:
         # Add feedback to log entry
         log_entry["feedback"] = "positive" if feedback == 'y' else "negative"
         log_entry["comment"] = str(comment) if comment else ""
+
+        # LLM Evaluation
+        evaluation, feedback = single_eval(task, steps, str(result), log_entry["feedback"], log_entry["comment"])
+
+        # Adding a note
+        current_call.feedback.add_note(f"LLM Reflection: {feedback}")
+
+        # Adding custom key/value pairs.
+        current_call.feedback.add("llm_evaluation", { "value": {evaluation} })
         
         # Append to log file
         log_file = "browser_agent_logs.json"
@@ -150,6 +164,72 @@ def call_gemini(client: genai.Client, user_task: str, file_path: str | None) -> 
         )
     )
 
+
+# Simple JSON mode LLM call helper function - will be used by the Evaluator
+def JSON_llm(client, user_prompt : str, schema : BaseModel, system_prompt : Optional[str] = None):
+    """ Run a language model with the given user prompt and system prompt, and return a structured JSON object. """
+    try:
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        
+        messages.append({"role": "user", "content": user_prompt})
+        
+        extract = client.chat.completions.create(
+            messages=messages,
+            model="meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
+            response_format={
+                "type": "json_object",
+                "schema": schema.model_json_schema(),
+            },
+        )
+        
+        response = json.loads(extract.choices[0].message.content)
+        return response
+        
+    except ValidationError as e:
+        raise ValueError(f"Schema validation failed: {str(e)}")
+    
+EVALUATOR_PROMPT = """Evaluate this following trace for an agent executing a task. You should be evaluate whether or not it was successful at solving the task.
+If it was not successful, then explain what stage it failed in the execution trace.
+Only output "PASS" if all criteria are met and you have no further suggestions for improvements, otherwise output "FAIL".
+Provide detailed feedback if there are areas that need improvement. You should specify what needs improvement and why.
+Only output JSON.
+
+Task: {task}
+Steps: {steps}
+Trace: {trace}
+Feedback: {feedback}
+Comment: {comment}
+
+Output:"""
+
+def evaluate(client, schema, task, steps, trace, feedback, comment) -> tuple[str, str]:
+    """Evaluate if a solution meets requirements."""
+    full_prompt = EVALUATOR_PROMPT.format(task=task, steps=steps, trace=trace, feedback=feedback, comment=comment)
+    
+    response = JSON_llm(client, full_prompt, schema)
+    
+    evaluation = response["evaluation"]
+    feedback = response["feedback"]
+
+    print("=== EVALUATION START ===")
+    print(f"Status: {evaluation}")
+    print(f"Feedback: {feedback}")
+    print("=== EVALUATION END ===\n")
+
+    return evaluation, feedback
+
+def single_eval(task, steps, trace, feedback, comment) -> tuple[str, list[dict]]:
+    #Build a schema for the evaluation
+    class Evaluation(BaseModel):
+        evaluation: Literal["PASS", "NEEDS_IMPROVEMENT", "FAIL"]
+        feedback: str
+
+    # While the generated response is not passing, keep generating and evaluating
+    return evaluate(Evaluation, task, steps, trace, feedback, comment)
+
+
 @weave.op()
 def main():
     # Ensure the Google API key is set via the environment variable
@@ -157,6 +237,11 @@ def main():
     if not api_key:
         print("Error: Please set the GEMINI_API_KEY environment variable.")
         sys.exit(1)
+    together_api_key = os.getenv("TOGETHER_API_KEY")
+    if not together_api_key:
+        print("Error: Please set the TOGETHER_API_KEY environment variable.")
+        sys.exit(1)
+    together_client = Together(api_key= together_api_key)
     
     # Get user input and find relevant PDF
     user_task = get_user_input()
