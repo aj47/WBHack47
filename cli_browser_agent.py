@@ -20,7 +20,7 @@ def activate_browser_agent(steps: str) -> str:
         except Exception as e:
             print("Failed to start a new Chrome instance. Ensure that all existing Chrome instances are closed and try again.")
             raise e
-        agent = Agent(task=task, llm=ChatOpenAI(model="gpt-4o"), browser=browser)
+        agent = Agent(task=steps, llm=ChatOpenAI(model="gpt-4o"), browser=browser)
         result = await agent.run()
         input('Press Enter to close the browser...')
         await browser.close()
