@@ -3,6 +3,8 @@ import sys
 import asyncio
 import os
 import argparse
+import json
+from datetime import datetime
 from google import genai
 from google.genai import types
 from browser_use import Agent, Browser, BrowserConfig
@@ -13,7 +15,7 @@ import weave
 weave.init('metis')
 
 @weave.op()
-def activate_browser_agent(steps: str) -> str:
+def activate_browser_agent(steps: str, task: str) -> str:
     """Activates the browser-use agent to complete the given step by step instructions using a real browser."""
     print("Executing browser steps:", steps)
     
@@ -37,6 +39,11 @@ def activate_browser_agent(steps: str) -> str:
     
     # Get feedback after browser use
     current_call = weave.require_current_call()
+    log_entry = {
+        "timestamp": datetime.now().isoformat(),
+        "task": task,
+        "steps": steps,
+        "result": result,
     while True:
         feedback = input("Was this helpful? (y/n): ").strip().lower()
         if feedback == 'y':
@@ -50,6 +57,26 @@ def activate_browser_agent(steps: str) -> str:
     comment = input("Any additional comments? (press Enter to skip): ").strip()
     if comment:
         current_call.feedback.add_note(comment)
+    
+    # Add feedback to log entry
+    log_entry["feedback"] = "positive" if feedback == 'y' else "negative"
+    log_entry["comment"] = comment if comment else ""
+    
+    # Append to log file
+    log_file = "browser_agent_logs.json"
+    try:
+        if os.path.exists(log_file):
+            with open(log_file, 'r') as f:
+                logs = json.load(f)
+        else:
+            logs = []
+        
+        logs.append(log_entry)
+        
+        with open(log_file, 'w') as f:
+            json.dump(logs, f, indent=2)
+    except Exception as e:
+        print(f"Warning: Failed to save log: {e}")
     
     return result
 
@@ -136,7 +163,7 @@ def main():
         print("Browser agent result:")
         print(steps)
         # Actually execute the browser automation
-        activate_browser_agent(steps)
+        activate_browser_agent(steps, user_task)
     else:
         print("Response from Gen AI:")
         print(response.text)
