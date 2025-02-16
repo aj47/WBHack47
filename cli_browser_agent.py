@@ -38,11 +38,14 @@ def activate_browser_agent(steps: str) -> str:
     # Get feedback after browser use
     current_call = weave.require_current_call()
     while True:
-        feedback = input("Was this helpful? (👍/👎): ").strip()
-        if feedback in ["👍", "👎"]:
-            current_call.feedback.add_reaction(feedback)
+        feedback = input("Was this helpful? (y/n): ").strip().lower()
+        if feedback == 'y':
+            current_call.feedback.add_reaction("👍")
             break
-        print("Please enter either 👍 or 👎")
+        elif feedback == 'n':
+            current_call.feedback.add_reaction("👎")
+            break
+        print("Please enter either y or n")
     
     comment = input("Any additional comments? (press Enter to skip): ").strip()
     if comment:
