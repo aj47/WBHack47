@@ -47,7 +47,7 @@ def main():
     if not args.file:
         args.file = input("Enter the file path to upload (press Enter to skip): ")
 
-    user_task = args.task
+    user_task = args.task + "\nPlease provide detailed step by step instructions for browser use."
     
     # Create the Gen AI client using the API key
     client = genai.Client(api_key=api_key)
@@ -91,6 +91,23 @@ def main():
     else:
         print("Response from Gen AI:")
     print(response.text)
+    while True:
+        followup = input("Enter follow-up message (or press Enter to exit): ")
+        if not followup.strip():
+            break
+        followup_response = client.models.generate_content(
+            model="gemini-2.0-flash-001",
+            contents=followup,
+            config=types.GenerateContentConfig(
+                automatic_function_calling=types.AutomaticFunctionCallingConfig(maximum_remote_calls=0),
+                tools=[],
+                tool_config=types.ToolConfig(
+                    function_calling_config=types.FunctionCallingConfig(mode='NONE')
+                )
+            )
+        )
+        print("Follow-up response:")
+        print(followup_response.text)
 
 if __name__ == "__main__":
     main()
