@@ -11,11 +11,15 @@ from langchain_openai import ChatOpenAI
 def activate_browser_agent(task: str) -> str:
     """Activates the browser-use agent to complete the given task using a real browser."""
     async def run_agent():
-        browser = Browser(
-            config=BrowserConfig(
-                chrome_instance_path='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+        try:
+            browser = Browser(
+                config=BrowserConfig(
+                    chrome_instance_path='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+                )
             )
-        )
+        except Exception as e:
+            print("Failed to start a new Chrome instance. Ensure that all existing Chrome instances are closed and try again.")
+            raise e
         agent = Agent(task=task, llm=ChatOpenAI(model="gpt-4o"), browser=browser)
         result = await agent.run()
         input('Press Enter to close the browser...')
