@@ -1,2 +1,4 @@
 browser-use
 wandb
+aperturedb
+sentence_transformers
