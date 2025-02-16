@@ -7,6 +7,7 @@ from google import genai
 from google.genai import types
 from browser_use import Agent, Browser, BrowserConfig
 from langchain_openai import ChatOpenAI
+from query_pdf import search_pdf
 import weave
 
 weave.init('metis')
@@ -33,22 +34,16 @@ def activate_browser_agent(steps: str) -> str:
         return result
     return asyncio.run(run_agent())
 
-def get_user_input() -> tuple[str, str]:
-    """Get task and file path from user input."""
-    # Parse command line arguments for task and file to upload
-    parser = argparse.ArgumentParser(description="Run browser agent with a task and file upload context")
+def get_user_input() -> str:
+    """Get task from user input."""
+    parser = argparse.ArgumentParser(description="Run browser agent with a task")
     parser.add_argument("task", nargs='?', help="Task for the browser agent")
-    parser.add_argument("--file", "-f", help="Path to file to upload")
     args = parser.parse_args()
 
     if not args.task:
         args.task = input("Enter the task for the browser agent: ")
 
-    # File upload is optional; if no file path is provided, prompt the user for a PDF file.
-    if not args.file:
-        args.file = input("Enter the file path to upload (press Enter to skip): ")
-
-    return args.task, args.file
+    return args.task
 
 @weave.op
 def call_gemini(client: genai.Client, user_task: str, file_path: str | None) -> types.GenerateContentResponse:
@@ -104,9 +99,10 @@ def main():
         print("Error: Please set the GEMINI_API_KEY environment variable.")
         sys.exit(1)
     
-    # Get user input
-    task, file_path = get_user_input()
-    user_task = task
+    # Get user input and find relevant PDF
+    user_task = get_user_input()
+    search_result = search_pdf(user_task, "pdf_instructions_correct2")
+    file_path = search_result['pdf_name'] if search_result else None
     
     # Create the Gen AI client using the API key
     client = genai.Client(api_key=api_key)
