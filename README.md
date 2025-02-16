@@ -1,13 +1,14 @@
-# Gen AI Chat Interface with Local PDF Context
+# Stytch Platform Assistant with PDF-Guided Automation
 
-This project implements a command-line chat interface that leverages the Google Gen AI SDK and a Browser Use agent to generate detailed step-by-step instructions for accomplishing user-specified tasks. It also supports incorporating context from a local PDF file to inform the generated instructions.
+This project implements a command-line interface that helps users navigate and accomplish tasks in the Stytch platform. It leverages Google's Gen AI SDK and a browser automation agent to execute detailed step-by-step instructions. The tool uses ApertureDB to intelligently retrieve relevant documentation from Stytch's PDF guides to inform the automated processes.
 
 ## Features
 
-- **Interactive Chat Interface:** Engage in a chat-like conversation where you can continuously enter tasks.
-- **Local PDF Integration:** Optionally upload a PDF file to enrich the context for task instructions.
-- **Google Gemini API Integration:** Utilizes the [google-genai](https://github.com/googleapis/python-genai) SDK for content generation.
-- **Detailed Instructions:** Generates step-by-step guidance on how to achieve your task using a browser automation agent.
+- **Interactive Assistance:** Engage in a conversation-like interface to specify your Stytch platform tasks.
+- **Smart Documentation Lookup:** Uses ApertureDB to automatically find and reference relevant sections from Stytch's documentation PDFs.
+- **Automated Task Execution:** Leverages browser automation to actually perform the tasks in the Stytch platform.
+- **Google Gemini AI Integration:** Utilizes the [google-genai](https://github.com/googleapis/python-genai) SDK to understand tasks and generate precise automation instructions.
+- **Execution Feedback:** Provides real-time feedback on task execution and allows for follow-up questions.
   
 ## Requirements
 
@@ -15,6 +16,8 @@ This project implements a command-line chat interface that leverages the Google 
 - [google-genai](https://github.com/googleapis/python-genai) (`pip install google-genai`)
 - [browser-use](https://github.com/browser-use/browser-use) (`pip install browser-use`)
 - [langchain_openai](https://github.com/langchain-ai/langchain) (`pip install langchain_openai`)
+- [aperturedb](https://github.com/aperture-data/aperturedb-python) (`pip install aperturedb`)
+- [sentence-transformers](https://github.com/UKPLab/sentence-transformers) (`pip install sentence-transformers`)
 
 ## Setup
 
@@ -37,16 +40,21 @@ This project implements a command-line chat interface that leverages the Google 
 
 ## Usage
 
-Run the CLI script:
+Run the assistant:
 ```bash
 python cli_browser_agent.py
 ```
 
-You will then be prompted to:
-- **Enter the task:** Type your desired task.
-- **Enter the path for a local PDF file:** Optionally, provide a path to a PDF file to include in the context (or leave blank to skip).
+You will be prompted to enter your desired Stytch platform task. The assistant will:
+1. Search through Stytch's documentation using ApertureDB to find relevant guidance
+2. Generate precise step-by-step instructions
+3. Execute the task automatically in your browser
+4. Provide feedback and allow for follow-up questions
 
-The system will generate and display detailed step-by-step instructions on how to achieve your task using the browser agent.
+Example tasks:
+- "Create a new organization in Stytch"
+- "Add a new user to my Stytch project"
+- "Configure authentication settings"
 
 ## Customization
 
