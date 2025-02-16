@@ -43,7 +43,7 @@ def activate_browser_agent(steps: str, task: str) -> str:
         "timestamp": datetime.now().isoformat(),
         "task": task,
         "steps": steps,
-        "result": result
+        "result": str(result)  # Convert result to string for JSON serialization
     }
     
     while True:
