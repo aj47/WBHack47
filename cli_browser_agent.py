@@ -32,7 +32,9 @@ def main():
     if not args.task:
         args.task = input("Enter the task for the browser agent: ")
 
-    # File upload is optional; if no file path is provided, no file will be uploaded.
+    # File upload is optional; if no file path is provided, prompt the user for a PDF file.
+    if not args.file:
+        args.file = input("Enter the file path to upload (press Enter to skip): ")
 
     user_task = args.task
     
