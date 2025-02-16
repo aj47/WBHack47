@@ -90,7 +90,7 @@ def main():
             mime_type=upload_file.mime_type,
             file_uri=upload_file.uri
         )))
-
+    
     response = client.models.generate_content(
         model="gemini-2.0-flash-001",
         contents=content_parts,
