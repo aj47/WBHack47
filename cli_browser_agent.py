@@ -88,9 +88,10 @@ def main():
     # Print the result from the function call if one occurred; otherwise, print the model's response.
     if response.function_calls:
         print("Browser agent result:")
+        print(response.function_calls[0].args.get('steps', ''))
     else:
         print("Response from Gen AI:")
-    print(response.text)
+        print(response.text)
     while True:
         followup = input("Enter follow-up message (or press Enter to exit): ")
         if not followup.strip():
