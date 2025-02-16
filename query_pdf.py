@@ -1,6 +1,7 @@
 from sentence_transformers import SentenceTransformer
 from aperturedb import Connector
 import numpy as np
+import weave
 
 def connect_to_db():
     db = Connector.Connector(host="metis-t3oknmxh.farm0000.cloud.aperturedata.io",
@@ -8,6 +9,7 @@ def connect_to_db():
                             password="metisadmin123!")
     return db
 
+@weave.op()
 def find_closest_descriptors(db, descriptorset_name, query_embedding, k=20):
     """Find k closest matches to the query"""
     query_embedding_bytes = query_embedding.astype('float32').tobytes()
@@ -26,6 +28,7 @@ def find_closest_descriptors(db, descriptorset_name, query_embedding, k=20):
     responses, blobs = db.query(q, [query_embedding_bytes])
     return responses[0]["FindDescriptor"]["entities"]
 
+@weave.op()
 def search_pdf(query_text, descriptorset_name):
     # Connect to DB
     db = connect_to_db()
