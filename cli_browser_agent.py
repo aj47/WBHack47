@@ -43,7 +43,9 @@ def activate_browser_agent(steps: str, task: str) -> str:
         "timestamp": datetime.now().isoformat(),
         "task": task,
         "steps": steps,
-        "result": result,
+        "result": result
+    }
+    
     while True:
         feedback = input("Was this helpful? (y/n): ").strip().lower()
         if feedback == 'y':
