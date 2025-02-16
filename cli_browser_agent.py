@@ -90,10 +90,13 @@ def main():
         )
     )
     
-    # Print the result from the function call if one occurred; otherwise, print the model's response.
+    # Execute the browser agent if we get steps
     if response.function_calls:
+        steps = response.function_calls[0].args.get('steps', '')
         print("Browser agent result:")
-        print(response.function_calls[0].args.get('steps', ''))
+        print(steps)
+        # Actually execute the browser automation
+        activate_browser_agent(steps)
     else:
         print("Response from Gen AI:")
         print(response.text)
