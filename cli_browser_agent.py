@@ -51,8 +51,12 @@ def get_user_input() -> tuple[str, str]:
     return args.task, args.file
 
 @weave.op
-def call_gemini(client: genai.Client, user_task: str, upload_file: types.File | None) -> types.GenerateContentResponse:
-    """Make Gemini API call with the given task and optional file."""
+def call_gemini(client: genai.Client, user_task: str, file_path: str | None) -> types.GenerateContentResponse:
+    """Make Gemini API call with the given task and optional file path."""
+    # File upload is optional. If a file path is provided, upload the file.
+    upload_file = None
+    if file_path and file_path.strip():
+        upload_file = client.files.upload(file=file_path)
     # Define the function declaration for activate_browser_agent
     function = types.FunctionDeclaration(
         name='activate_browser_agent',
@@ -107,14 +111,9 @@ def main():
     # Create the Gen AI client using the API key
     client = genai.Client(api_key=api_key)
 
-    # File upload is optional. If a file path is provided, upload the file.
-    upload_file = None
-    if file_path and file_path.strip():
-        upload_file = client.files.upload(file=file_path)
-
     # Call Gemini with weave attributes
-    with weave.attributes({'user_intent': user_task, 'doc_file': upload_file}):
-        response = call_gemini(client, user_task, upload_file)
+    with weave.attributes({'user_intent': user_task, 'doc_file': file_path}):
+        response = call_gemini(client, user_task, file_path)
     
     # Define the function declaration for activate_browser_agent
     function = types.FunctionDeclaration(
