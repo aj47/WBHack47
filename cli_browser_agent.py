@@ -73,7 +73,7 @@ def call_gemini(client: genai.Client, user_task: str, upload_file: types.File | 
 
     # Generate content with function calling enabled
     # Create content parts including both text and file
-    content_parts = [genai.types.Part(text=user_task)]
+    content_parts = [genai.types.Part(text=(user_task + "\nPlease provide detailed step by step instructions for browser use."))]
     if upload_file:
         content_parts.append(genai.types.Part(file_data=genai.types.FileData(
             mime_type=upload_file.mime_type,
@@ -102,7 +102,7 @@ def main():
     
     # Get user input
     task, file_path = get_user_input()
-    user_task = task + "\nPlease provide detailed step by step instructions for browser use."
+    user_task = task
     
     # Create the Gen AI client using the API key
     client = genai.Client(api_key=api_key)
