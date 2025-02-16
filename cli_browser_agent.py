@@ -32,29 +32,46 @@ def main():
     if not args.task:
         args.task = input("Enter the task for the browser agent: ")
 
-    if not args.file:
-        args.file = input("Enter the file path to upload: ")
+    # File upload is optional; if no file path is provided, no file will be uploaded.
 
     user_task = args.task
     
     # Create the Gen AI client using the API key
     client = genai.Client(api_key=api_key)
+
+    # File upload is optional. If a file path is provided, upload the file.
+    upload_file = None
+    if args.file and args.file.strip():
+        upload_file = client.files.upload(file=args.file)
     
     # Generate content with function calling enabled.
     # The configuration below forces function call mode to 'ANY' so that if the model
     # deems it appropriate, it will call the provided activate_browser_agent function.
-    response = client.models.generate_content(
-        model="gemini-2.0-flash-001",
-        contents=user_task,
-        file=client.files.upload(file=args.file),
-        config=types.GenerateContentConfig(
-            tools=[activate_browser_agent],
-            automatic_function_calling=types.AutomaticFunctionCallingConfig(maximum_remote_calls=2),
-            tool_config=types.ToolConfig(
-                function_calling_config=types.FunctionCallingConfig(mode='ANY')
+    if upload_file:
+        response = client.models.generate_content(
+            model="gemini-2.0-flash-001",
+            contents=user_task,
+            file=upload_file,
+            config=types.GenerateContentConfig(
+                tools=[activate_browser_agent],
+                automatic_function_calling=types.AutomaticFunctionCallingConfig(maximum_remote_calls=2),
+                tool_config=types.ToolConfig(
+                    function_calling_config=types.FunctionCallingConfig(mode='ANY')
+                )
             )
         )
-    )
+    else:
+        response = client.models.generate_content(
+            model="gemini-2.0-flash-001",
+            contents=user_task,
+            config=types.GenerateContentConfig(
+                tools=[activate_browser_agent],
+                automatic_function_calling=types.AutomaticFunctionCallingConfig(maximum_remote_calls=2),
+                tool_config=types.ToolConfig(
+                    function_calling_config=types.FunctionCallingConfig(mode='ANY')
+                )
+            )
+        )
     
     # Print the result from the function call if one occurred; otherwise, print the model's response.
     if response.function_calls:
