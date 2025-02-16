@@ -50,6 +50,7 @@ def get_user_input() -> tuple[str, str]:
 
     return args.task, args.file
 
+@weave.op
 def call_gemini(client: genai.Client, user_task: str, upload_file: types.File | None) -> types.GenerateContentResponse:
     """Make Gemini API call with the given task and optional file."""
     # Define the function declaration for activate_browser_agent
