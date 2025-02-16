@@ -9,9 +9,9 @@ from browser_use import Agent, Browser, BrowserConfig
 from langchain_openai import ChatOpenAI
 
 def activate_browser_agent(steps: str) -> str:
-    print("STEPS GIVEN", steps)
-    return
     """Activates the browser-use agent to complete the given step by step instructions using a real browser."""
+    print("Executing browser steps:", steps)
+    
     async def run_agent():
         try:
             browser = Browser(
