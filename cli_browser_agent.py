@@ -8,8 +8,8 @@ from google.genai import types
 from browser_use import Agent, Browser, BrowserConfig
 from langchain_openai import ChatOpenAI
 
-def activate_browser_agent(task: str) -> str:
-    """Activates the browser-use agent to complete the given task using a real browser."""
+def activate_browser_agent(steps: str) -> str:
+    """Activates the browser-use agent to complete the given step by step instructions using a real browser."""
     async def run_agent():
         try:
             browser = Browser(
