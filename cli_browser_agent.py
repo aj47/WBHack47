@@ -7,7 +7,11 @@ from google import genai
 from google.genai import types
 from browser_use import Agent, Browser, BrowserConfig
 from langchain_openai import ChatOpenAI
+import weave
 
+weave.init('metis')
+
+@weave.op()
 def activate_browser_agent(steps: str) -> str:
     """Activates the browser-use agent to complete the given step by step instructions using a real browser."""
     print("Executing browser steps:", steps)
@@ -29,6 +33,7 @@ def activate_browser_agent(steps: str) -> str:
         return result
     return asyncio.run(run_agent())
 
+@weave.op()
 def main():
     # Ensure the Google API key is set via the environment variable
     api_key = os.getenv("GEMINI_API_KEY")
