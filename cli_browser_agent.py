@@ -17,10 +17,9 @@ from pydantic import Field, BaseModel, ValidationError
 
 
 weave.init('metis')
-client = Together()
 
 @weave.op()
-def activate_browser_agent(steps: str, task: str) -> str:
+def activate_browser_agent(together_client, steps: str, task: str) -> str:
     """Activates the browser-use agent to complete the given step by step instructions using a real browser."""
     print("Executing browser steps:", steps)
     
@@ -72,7 +71,7 @@ def activate_browser_agent(steps: str, task: str) -> str:
         log_entry["comment"] = str(comment) if comment else ""
 
         # LLM Evaluation
-        evaluation, feedback = single_eval(task, steps, str(result), log_entry["feedback"], log_entry["comment"])
+        evaluation, feedback = single_eval(together_client, task, steps, str(result), log_entry["feedback"], log_entry["comment"])
 
         # Adding a note
         current_call.feedback.add_note(f"LLM Reflection: {feedback}")
@@ -166,7 +165,7 @@ def call_gemini(client: genai.Client, user_task: str, file_path: str | None) -> 
 
 
 # Simple JSON mode LLM call helper function - will be used by the Evaluator
-def JSON_llm(client, user_prompt : str, schema : BaseModel, system_prompt : Optional[str] = None):
+def JSON_llm(together_client, user_prompt : str, schema : BaseModel, system_prompt : Optional[str] = None):
     """ Run a language model with the given user prompt and system prompt, and return a structured JSON object. """
     try:
         messages = []
@@ -175,7 +174,7 @@ def JSON_llm(client, user_prompt : str, schema : BaseModel, system_prompt : Opti
         
         messages.append({"role": "user", "content": user_prompt})
         
-        extract = client.chat.completions.create(
+        extract = together_client.chat.completions.create(
             messages=messages,
             model="meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
             response_format={
@@ -204,11 +203,11 @@ Comment: {comment}
 
 Output:"""
 
-def evaluate(client, schema, task, steps, trace, feedback, comment) -> tuple[str, str]:
+def evaluate(together_client, schema, task, steps, trace, feedback, comment) -> tuple[str, str]:
     """Evaluate if a solution meets requirements."""
     full_prompt = EVALUATOR_PROMPT.format(task=task, steps=steps, trace=trace, feedback=feedback, comment=comment)
     
-    response = JSON_llm(client, full_prompt, schema)
+    response = JSON_llm(together_client, full_prompt, schema)
     
     evaluation = response["evaluation"]
     feedback = response["feedback"]
@@ -220,14 +219,14 @@ def evaluate(client, schema, task, steps, trace, feedback, comment) -> tuple[str
 
     return evaluation, feedback
 
-def single_eval(task, steps, trace, feedback, comment) -> tuple[str, list[dict]]:
+def single_eval(together_client, task, steps, trace, feedback, comment) -> tuple[str, list[dict]]:
     #Build a schema for the evaluation
     class Evaluation(BaseModel):
         evaluation: Literal["PASS", "NEEDS_IMPROVEMENT", "FAIL"]
         feedback: str
 
     # While the generated response is not passing, keep generating and evaluating
-    return evaluate(Evaluation, task, steps, trace, feedback, comment)
+    return evaluate(together_client, Evaluation, task, steps, trace, feedback, comment)
 
 
 @weave.op()
@@ -261,7 +260,7 @@ def main():
         print("Browser agent result:")
         print(steps)
         # Actually execute the browser automation
-        activate_browser_agent(steps, user_task)
+        activate_browser_agent(together_client, steps, user_task)
     else:
         print("Response from Gen AI:")
         print(response.text)
