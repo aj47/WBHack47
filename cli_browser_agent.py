@@ -87,7 +87,7 @@ def main():
         )))
 
     response = client.models.generate_content(
-        model="gemini-2-0-flash-001",
+        model="gemini-2.0-flash-001",
         contents=content_parts,
         config=types.GenerateContentConfig(
             tools=[tool],
