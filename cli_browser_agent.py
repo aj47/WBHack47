@@ -32,7 +32,23 @@ def activate_browser_agent(steps: str) -> str:
         input('Press Enter to close the browser...')
         await browser.close()
         return result
-    return asyncio.run(run_agent())
+
+    result = asyncio.run(run_agent())
+    
+    # Get feedback after browser use
+    current_call = weave.require_current_call()
+    while True:
+        feedback = input("Was this helpful? (👍/👎): ").strip()
+        if feedback in ["👍", "👎"]:
+            current_call.feedback.add_reaction(feedback)
+            break
+        print("Please enter either 👍 or 👎")
+    
+    comment = input("Any additional comments? (press Enter to skip): ").strip()
+    if comment:
+        current_call.feedback.add_note(comment)
+    
+    return result
 
 def get_user_input() -> str:
     """Get task from user input."""
