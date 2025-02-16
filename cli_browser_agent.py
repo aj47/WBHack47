@@ -5,14 +5,21 @@ import os
 import argparse
 from google import genai
 from google.genai import types
-from browser_use import Agent
+from browser_use import Agent, Browser, BrowserConfig
 from langchain_openai import ChatOpenAI
 
 def activate_browser_agent(task: str) -> str:
-    """Activates the browser-use agent to complete the given task."""
+    """Activates the browser-use agent to complete the given task using a real browser."""
     async def run_agent():
-        agent = Agent(task=task, llm=ChatOpenAI(model="gpt-4o"))
+        browser = Browser(
+            config=BrowserConfig(
+                chrome_instance_path='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+            )
+        )
+        agent = Agent(task=task, llm=ChatOpenAI(model="gpt-4o"), browser=browser)
         result = await agent.run()
+        input('Press Enter to close the browser...')
+        await browser.close()
         return result
     return asyncio.run(run_agent())
 
