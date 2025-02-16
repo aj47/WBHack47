@@ -113,7 +113,7 @@ def get_user_input() -> str:
     args = parser.parse_args()
 
     if not args.task:
-        args.task = input("Enter the task for the browser agent: ")
+        args.task = input("What what you want to achieve on stych: ")
 
     return args.task
 
