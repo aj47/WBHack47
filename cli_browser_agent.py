@@ -102,7 +102,7 @@ def main():
     # Get user input and find relevant PDF
     user_task = get_user_input()
     search_result = search_pdf(user_task, "pdf_instructions_correct2")
-    file_path = search_result['pdf_name'] if search_result else None
+    file_path = search_result['pdf_name']+".pdf" if search_result else None
     
     # Create the Gen AI client using the API key
     client = genai.Client(api_key=api_key)
