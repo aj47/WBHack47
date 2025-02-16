@@ -9,7 +9,7 @@ from google import genai
 from google.genai import types
 from browser_use import Agent, Browser, BrowserConfig
 from langchain_openai import ChatOpenAI
-from query_pdf import search_pdf
+from query_image_text_pdf import search_pdf
 import weave
 from together import Together
 from typing import Any, Optional, Dict, List, Literal
@@ -245,7 +245,7 @@ def main():
     
     # Get user input and find relevant PDF
     user_task = get_user_input()
-    search_result = search_pdf(user_task, "pdf_instructions_correct2")
+    search_result = search_pdf(user_task)
     file_path = search_result['pdf_name']+".pdf" if search_result else None
     
     # Create the Gen AI client using the API key

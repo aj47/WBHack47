@@ -1,3 +1,7 @@
+together
+open-clip-torch
+PyMuPDF
+pillow
 browser-use
 wandb
 aperturedb
