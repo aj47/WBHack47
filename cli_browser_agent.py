@@ -39,44 +39,55 @@ def activate_browser_agent(steps: str, task: str) -> str:
     
     # Get feedback after browser use
     current_call = weave.require_current_call()
-    log_entry = {
-        "timestamp": datetime.now().isoformat(),
-        "task": task,
-        "steps": steps,
-        "result": str(result)  # Convert result to string for JSON serialization
-    }
-    
-    while True:
-        feedback = input("Was this helpful? (y/n): ").strip().lower()
-        if feedback == 'y':
-            current_call.feedback.add_reaction("👍")
-            break
-        elif feedback == 'n':
-            current_call.feedback.add_reaction("👎")
-            break
-        print("Please enter either y or n")
-    
-    comment = input("Any additional comments? (press Enter to skip): ").strip()
-    if comment:
-        current_call.feedback.add_note(comment)
-    
-    # Add feedback to log entry
-    log_entry["feedback"] = "positive" if feedback == 'y' else "negative"
-    log_entry["comment"] = comment if comment else ""
-    
-    # Append to log file
-    log_file = "browser_agent_logs.json"
+    # Create and save log entry
     try:
-        if os.path.exists(log_file):
-            with open(log_file, 'r') as f:
-                logs = json.load(f)
-        else:
-            logs = []
+        log_entry = {
+            "timestamp": datetime.now().isoformat(),
+            "task": str(task),
+            "steps": str(steps),
+            "result": str(result)
+        }
         
+        while True:
+            feedback = input("Was this helpful? (y/n): ").strip().lower()
+            if feedback == 'y':
+                current_call.feedback.add_reaction("👍")
+                break
+            elif feedback == 'n':
+                current_call.feedback.add_reaction("👎")
+                break
+            print("Please enter either y or n")
+        
+        comment = input("Any additional comments? (press Enter to skip): ").strip()
+        if comment:
+            current_call.feedback.add_note(comment)
+        
+        # Add feedback to log entry
+        log_entry["feedback"] = "positive" if feedback == 'y' else "negative"
+        log_entry["comment"] = str(comment) if comment else ""
+        
+        # Append to log file
+        log_file = "browser_agent_logs.json"
+        logs = []
+        
+        # Read existing logs if file exists
+        if os.path.exists(log_file) and os.path.getsize(log_file) > 0:
+            try:
+                with open(log_file, 'r') as f:
+                    logs = json.load(f)
+            except json.JSONDecodeError:
+                # If file is corrupted, start fresh
+                logs = []
+        
+        # Ensure logs is a list
+        if not isinstance(logs, list):
+            logs = []
+            
         logs.append(log_entry)
         
+        # Write updated logs
         with open(log_file, 'w') as f:
-            json.dump(logs, f, indent=2)
+            json.dump(logs, f, indent=2, default=str)
     except Exception as e:
         print(f"Warning: Failed to save log: {e}")
     
